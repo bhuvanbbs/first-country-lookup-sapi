@@ -1,0 +1,12 @@
+keystore:
+  path: "test.jks"
+  alias: "testkey"
+  pass: "![z+Ig2CMVmpAHIKWAysIa1Q==]"
+ 
+https:
+  port: "8082" 
+
+request:
+  url: "https://api.first.org/data/v1/countries"
+  client_id: "51482e5b09ad476d96e2e11d116717ab"
+  client_secret: "![6INLpppO3Vuzqksxo7Qih1ziH01vj3wJuv9+17iEgh4D2qspiGEr1VCdfY2H1hTT]"

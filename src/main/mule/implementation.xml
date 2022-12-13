@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
+	<flow name="get-country-flow" doc:id="1722667a-44e0-4122-b57d-b241c00829d4" >
+		<http:request method="GET" doc:name="Get-Country-List" doc:id="df7a5664-6411-4ca6-a3f0-62f4ae34b9e5" url="${request.url}">
+			<reconnect frequency="3000" count="3" />
+		</http:request>
+		<ee:transform doc:name="Split Country Code" doc:id="7386082b-0497-4f85-97f6-07eb1b8c3ee8" >
+			<ee:message >
+				<ee:set-payload resource="scripts/split-country-code.dwl" />
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Find Index" doc:id="0c96e8d2-99ad-4adc-9be3-0c8320f6632b" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="index" ><![CDATA[%dw 2.0
+output application/json
+---
+indexOf(payload.isoCode, vars.countryIso)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Find Country Name" doc:id="c2d331f7-1e12-46d0-bbeb-81dd5e9599c5" >
+			<when expression='#[vars.index==-1]'>
+				<raise-error doc:name="Raise Error On Invalid CountryIso" doc:id="967cf3b4-203e-4858-bf9a-27cfbc5dd649" type="COUNTRY:INVALID_ISO" description="No country found with the countryIso code" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Get Country Name" doc:id="3ec682d0-1525-4ab8-9576-6790a1d6641e">
+			<ee:message>
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.country[vars.index]]]></ee:set-payload>
+			</ee:message>
+				<ee:variables>
+				</ee:variables>
+		</ee:transform>
+				<logger level="INFO" doc:name="Log Country Name" doc:id="ebd8c942-0df7-4990-b60e-928615e01ea5" message='#[output application/json --- {"correleationId": vars.cid , "countryIsoCode": vars.countryIso, "Country":payload}]'/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <apikit:config name="first-country-lookup-sapi-config" api="resource::3d661517-1a7c-428a-a671-160ec2d12da9:first-country-lookup-sapi:1.0.3:raml:zip:first-country-lookup-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="first-country-lookup-sapi-main" doc:id="f6694e25-f8bc-47d9-b677-6a86924d43d0">
+        <http:listener config-ref="HTTP-Listener-config" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="first-country-lookup-sapi-config" doc:id="bfc139c2-6e87-40f4-8651-c2a4d0db50e3" />
+    </flow>
+    <flow name="get:\country\(countryIso):first-country-lookup-sapi-config">
+        <ee:transform doc:name="SET CountryIso" doc:id="d3f53495-e564-46f1-a51d-a647ee7a060f">
+            <ee:variables>
+                <ee:set-variable variableName="countryIso"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams.'countryIso']]></ee:set-variable>
+				<ee:set-variable variableName="cid" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.headers.correlationId]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="get-country-flow" doc:id="e9bde381-b553-478d-98a3-488c3e219a13" name="get-country-flow" />
+    </flow>
+</mule>
